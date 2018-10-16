@@ -1,6 +1,6 @@
 public class BCP implements Comparable<BCP> {
 
-    private int PC, X, Y, status, priority, credit, quantum;
+    private int PC, X, Y, status, priority, credit, blockCount;
     String progamName;
     String[] memoCMD = new String[21];
 
@@ -11,12 +11,11 @@ public class BCP implements Comparable<BCP> {
     }
 
     //Atualização dos dados do Processo no BCP pré-interrupção.
-    void setData(int PC, int X, int Y, int credit, int quantum){
+    void setData(int PC, int X, int Y, int credit){
         setPC(PC);
         setX(X);
         setY(Y);
         setCredit(credit);
-        setQuantum(quantum);
     }
 
 
@@ -27,15 +26,14 @@ public class BCP implements Comparable<BCP> {
 
     public void setY(int y) { Y = y; }
 
-    public void setStatusReady(int status) { this.status = 0; }
-    public void setStatusBlocked(int status) { this.status = 1; }
-    public void setStatusExec(int status) { this.status = -1; }
+    public void setStatusReady() { this.status = 0; }
+    public void setStatusBlocked() { this.status = 1; }
 
     public void setPriority(int priority) { this.priority = priority; }
 
     public void setCredit(int credit) { this.credit = credit; }
 
-    public void setQuantum(int quantum) { this.quantum = quantum; }
+    public void setBlockCount(int blockCount) { this.blockCount = blockCount; }
 
     public int getPC() {return PC;}
 
@@ -49,5 +47,5 @@ public class BCP implements Comparable<BCP> {
 
     public int getCredit() { return credit; }
 
-    public int getQuantum() { return quantum; }
+    public int getBlockCount() { return blockCount; }
 }

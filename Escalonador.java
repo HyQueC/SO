@@ -9,7 +9,7 @@ public class Escalonador{
     static LinkedList<BCP>[] ready;
 
 //Registradores de uso geral, registrador específico (PC) e o Quantum inicial.
-    static int X, Y, PC, quantIni;
+    static int X, Y, PC, quantIni, instNum, changeNum;
 
 // Quantum calculado à medida que o processo em execução perde os créditos, e outras variáveis.
     static double quantum, changeAverage, instructAverage;
@@ -113,10 +113,50 @@ public class Escalonador{
     }
 
     static void executeProcess(BCP proc){
+        if(proc == null){
+            if(blocked.size() == 0) distributeCredits(table);
+
+            return;
+        }
+
+        String cmd;
+        changeNum++;
         X = proc.getX();
         Y = proc.getY();
         PC = proc.getPC();
+        quantum = quantIni * Math.pow(2,(proc.getPriority()-proc.getCredit()));
 
+        for(int i = 0; i < quantum; i++){
+            cmd = proc.memoCMD[PC];
+            PC++;
+
+            if(cmd.equals("COM")) instNum++;
+
+            else if(cmd.startsWith("X=")){
+                X = cmd.charAt(2) - '0';
+                instNum++;
+
+            }else if(cmd.startsWith("Y=")){
+                Y = cmd.charAt(2) - '0';
+                instNum++;
+
+            }else if(cmd.equals("E/S")){
+                blocked.add(proc);
+                proc.setStatusBlocked();
+                proc.setData(PC, X, Y, proc.getCredit()-1);
+                instNum++;
+                return;
+
+            }else if(cmd.equals("SAIDA")){
+                table.remove(proc);
+                instNum++;
+                return;
+
+            }else System.out.println("Comando invalido, o processo deixara de ser executado");
+
+        }
+        proc.setData(PC, X, Y, proc.getCredit()-1);
+        ready[proc.getCredit()].add(proc);
     }
 
     public static void main(String[] args) throws FileNotFoundException{
@@ -138,9 +178,11 @@ public class Escalonador{
             ready[i] = new LinkedList<BCP>();
         }
         populateReady(ready, table);
-        BCP aux = getProcess(ready);
-        if(aux != null) executeProcess(aux);
-        else distributeCredits(table);
+
+        while(table.size() != 0){
+
+            executeProcess(getProcess(ready));
+        }
         /*
         ListIterator<BCP> it;
         BCP aux;
