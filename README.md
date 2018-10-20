@@ -1,1 +1,23 @@
 # SO
+
+Classes utilizadas SO, Escalonador e BCP.
+
+Escalonador vai cuidar da inserção e remoção dos processos nas filas de pronto e bloqueado, além da seleção do próximo processo a ser executado.
+
+SO vai cuidar do resto;
+
+BCP vai representar o processo ao longo do algoritmo
+
+Pontos faltando:
+  - Reinserção dos processos executados na primeira posição da fila correspondente ao seu número de créditos
+  - Organização dos métodos de inserção e remoção no Escalonador
+  - Gerencia da fila de bloqueados (contagem de quantos processos passaram pela execução para determinar quando liberar o processo bloqueado).
+  - Contagem apropriada do quantum na proporção de 1Q para 3 Instruções. Tal como o comportamento de dobrar o quantum recebido por um processo e não o número de instruções (o número de instruções dobra por consequência disso).
+  - Filas de prontos devem referenciar a Tabela de Processos por índice e "não conter os processos (BCP).
+  
+ 
+  - Print nos logFiles
+  - Contagem das estatísticas pedidas pelo professor (Médias, etc)
+  - Definir os outros 10 valores de Quantum (quantas instruções 1Quantum equivale)
+  - Formar 2 gráficos com as estatísticas pedidas pelo professor e o quantum definido.
+  - Criar o relatório com o resultado desses valores a fim de determinar o quantum ideal.
