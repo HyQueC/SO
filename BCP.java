@@ -1,6 +1,6 @@
 public class BCP implements Comparable<BCP> {
 
-    private int PC, X, Y, status, priority, credit, blockCount;
+    private int PC, X, Y, status, priority, credit, blockTime;
     String progamName;
     String[] memoCMD = new String[21];
 
@@ -18,8 +18,6 @@ public class BCP implements Comparable<BCP> {
         setCredit(credit);
     }
 
-
-
     public void setPC(int PC) { this.PC = PC; }
 
     public void setX(int x) { X = x; }
@@ -27,13 +25,20 @@ public class BCP implements Comparable<BCP> {
     public void setY(int y) { Y = y; }
 
     public void setStatusReady() { this.status = 0; }
-    public void setStatusBlocked() { this.status = 1; }
+    public void setStatusBlocked() {
+        this.status = 1;
+        setBlockTime(2);
+    }
 
     public void setPriority(int priority) { this.priority = priority; }
 
-    public void setCredit(int credit) { this.credit = credit; }
+    public void setCredit(int credit) {
+        if(credit >= 0) {
+            this.credit = credit;
+        }
+    }
 
-    public void setBlockCount(int blockCount) { this.blockCount = blockCount; }
+    public void setBlockTime(int blockTime) { this.blockTime = blockTime; }
 
     public int getPC() {return PC;}
 
@@ -47,5 +52,6 @@ public class BCP implements Comparable<BCP> {
 
     public int getCredit() { return credit; }
 
-    public int getBlockCount() { return blockCount; }
+    public int getBlockTime() { return blockTime; }
+
 }

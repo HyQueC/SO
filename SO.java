@@ -10,25 +10,23 @@ public class SO {
     //Tabela de Processos e filas de bloqueados e prontos.
     static LinkedList<BCP> table, blocked;
     static LinkedList<BCP>[] ready;
+    static Escalonador esc;
 
-    //Registradores de uso geral, registrador específico (PC) e o Quantum inicial.
-    static int X, Y, PC, quantIni, instNum, changeNum;
+    //Registradores de uso geral, registrador específico (PC) e o Quantum base.
+    static int X, Y, PC, quantBase, changeNum, spentQuantum, executedInst;
 
     // Quantum calculado à medida que o processo em execução perde os créditos, e outras variáveis.
-    static double quantum, changeAverage, instructAverage;
+    static double changeAverage, instructAverage;
     static String filePath = "./processos/";
 
     // Leitura do nome, comandos e quantum a ser utilizado pelos processos.
     static BCP readProcessFile(String fileName){
         int i = 0;
         File file = new File(filePath + fileName);
-        File file2 = new File(filePath + "quantum.txt");
+
         BCP process = new BCP();
 
         try {
-            Scanner quantumRead = new Scanner(file2);
-            quantIni = quantumRead.nextInt();
-            quantumRead.close();
 
             Scanner sc = new Scanner(file);
             process.progamName = sc.nextLine();
@@ -50,17 +48,23 @@ public class SO {
 
     // Leitura da prioridade de cada processo e distribuição de créditos equivalentes à prioridade
 // Seleção da prioridade mais alta a fim de definir o número de filas do conjunto de processos prontos
-    static int readPriority(String fileName, LinkedList<BCP> table){
+    static int readPriority(String fileName, LinkedList<BCP> auxT){
         File file = new File(filePath + fileName);
+        File file2 = new File(filePath + "quantum.txt");
+
         int maxPrior = 0;
         try {
+
+            Scanner quantumRead = new Scanner(file2);
+            quantBase = quantumRead.nextInt();
+            quantumRead.close();
+
             Scanner sc = new Scanner(file);
             BCP aux;
-            ListIterator<BCP> it = table.listIterator(0);
+            ListIterator<BCP> it = auxT.listIterator(0);
             while (it.hasNext()) {
 
                 aux = it.next();
-
 
                 aux.setPriority(sc.nextInt());
                 if(aux.getPriority() > maxPrior) maxPrior = aux.getPriority();
@@ -83,8 +87,8 @@ public class SO {
         BCP aux;
         while(it.hasNext()) {
             aux = it.next();
-            setProcess(ready, aux);
             table.add(aux);
+            ready[aux.getCredit()].add(table.getLast());
         }
     }
 
@@ -100,61 +104,64 @@ public class SO {
     }
 
 
-    // Inserção do processo de maneira ordenada pela(o) prioridade/crédito atual.
-    static void setProcess(LinkedList<BCP>[] ready, BCP process){
-        ready[process.getCredit()].add(process);
-        Collections.sort(ready[process.getCredit()]);
-    }
-
-    static void executeProcess(BCP proc){
+    static int executeProcess(BCP proc){
         if(proc == null){
             if(blocked.size() == 0) distributeCredits(table);
 
-            return;
+            return 0;
         }
 
-        String cmd;
+        String cmd = proc.memoCMD[PC];
+
+        // O Número de instruções a serem executadas a é igual ao número base de instruções
+        // vezes o número de quantum atribuido ao processo
+        double instruction = quantBase * Math.pow(2,(proc.getPriority()-proc.getCredit()));
+        int i = 1;
+
+        while(i <= instruction){
+            for(int j = 1; j  <= quantBase; i++, j++){
+                PC++;
+
+                if(cmd.equals("COM"));
+
+                else if(cmd.startsWith("X=")){
+                    X = cmd.charAt(2) - '0';
+
+
+                }else if(cmd.startsWith("Y=")){
+                    Y = cmd.charAt(2) - '0';
+
+
+                }else if(cmd.equals("E/S")){
+                    spentQuantum++;
+                    changeNum++;
+                    esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, 1);
+                    return i;
+
+
+                }else if(cmd.equals("SAIDA")){
+                    spentQuantum++;
+                    changeNum++;
+                    esc.EndProcess(table, proc);
+                    return i;
+
+
+                }else {
+                    System.out.println("Comando invalido, o processo deixara de ser executado");
+                    changeNum++;
+                    return i;
+                }
+            }
+            spentQuantum++;
+        }
         changeNum++;
-        X = proc.getX();
-        Y = proc.getY();
-        PC = proc.getPC();
-        quantum = quantIni * Math.pow(2,(proc.getPriority()-proc.getCredit()));
 
-        for(int i = 0; i < quantum; i++){
-            cmd = proc.memoCMD[PC];
-            PC++;
-
-            if(cmd.equals("COM")) instNum++;
-
-            else if(cmd.startsWith("X=")){
-                X = cmd.charAt(2) - '0';
-                instNum++;
-
-            }else if(cmd.startsWith("Y=")){
-                Y = cmd.charAt(2) - '0';
-                instNum++;
-
-            }else if(cmd.equals("E/S")){
-                blocked.add(proc);
-                proc.setStatusBlocked();
-                proc.setData(PC, X, Y, proc.getCredit()-1);
-                instNum++;
-                return;
-
-            }else if(cmd.equals("SAIDA")){
-                table.remove(proc);
-                instNum++;
-                return;
-
-            }else System.out.println("Comando invalido, o processo deixara de ser executado");
-
-        }
-        proc.setData(PC, X, Y, proc.getCredit()-1);
-        ready[proc.getCredit()].add(proc);
+        esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, 0);
+        return i;
     }
 
     public static void main(String[] args) throws FileNotFoundException{
-        Escalonador esc = new Escalonador();
+        esc = new Escalonador();
         LinkedList<BCP> auxT = new LinkedList<>();
         table = new LinkedList<>();
         blocked = new LinkedList<>();
@@ -185,17 +192,28 @@ public class SO {
                 System.out.println(aux.progamName+ " " +aux.getCredit());
             }
         }
+        System.out.println();
 
         BCP poop = table.pop();
 
-        poop.setCredit(3);
-
         /*
             Retirando o processo de table, não retira de ready
-            Processo recém colocado na fila está indo pro final da sua categoria de crédito
+
+
         */
 
-        setProcess(ready, poop);
+        esc.setProcessData(ready, blocked, poop, PC, X, Y, poop.getCredit()-1, 0);
+        int[] regList = new int[5];
+
+        poop.setData(300, 25, 27, poop.getCredit());
+        poop = esc.getNextProcess(ready, blocked, regList);
+
+        PC = regList[0];
+        X = regList[1];
+        Y = regList[2];
+
+        System.out.println(poop.getPC()+ " "+ poop.getX()+ " "+ poop.getY()+ " "+ poop.getCredit());
+        System.out.println(PC+ " "+ X+ " "+Y+ " ");
 
         for(i = maxPrior; i >= 0; i--){
             it = ready[i].listIterator(0);
@@ -204,10 +222,7 @@ public class SO {
                 System.out.println(aux.progamName+ " " +aux.getCredit());
             }
         }
-
-
-
-
+        System.out.println();
 
 
 
@@ -216,10 +231,19 @@ public class SO {
         Algoritmo de Escalonamento
             - Gerência das múltiplas filas
             - Redistribuição de créditos e custeamento
+
+        Estatísticas
+            - Número médio de trocas de processo = changeNum/auxT.size();
+            - Número médio de instruções executadas por quantum = executedInst/spentQuantum
+            - Quantum base utilizado
+
         Log File
             - PrintWriter
-            - Cálculo da média de instruções por quantum, de trocas, etc.
-            - Quantum ideal
+            - Inclusão das Estatísticas
+
+        Quantum Ideal
+            - Formação de 2 gráficos a partir das 2 outras estatísticas com o Quantum Base como abscissa
+            - Escolha do Quantum Ideal a partir do ponto de encontro nos dois gráficos.
         */
     }
 }
