@@ -15,7 +15,7 @@ public class Escalonador{
                 aux.setStatusReady();
                 setProcessData(ready, blocked, aux, aux.getCredit()-1);
             }
-        }
+        }  //Transferir para o SO
         for(int i = ready.length-1; i > 0; i--){
             if(!(ready[i].size() == 0)){
                aux = ready[i].pop();
@@ -39,9 +39,10 @@ public class Escalonador{
 
     // Inserção do processo de maneira ordenada pela(o) prioridade/crédito atual.
     // Excessão no caso da fila de crédito 0, FIFO.
+    
     void setProcessData(LinkedList<BCP>[] ready, LinkedList<BCP> blocked, BCP process, int PC, int X, int Y, int credit, int status){
         process.setData(PC, X, Y, credit);
-
+    // Set status transferido pro SO    
         if(status == 1) {
             process.setStatusBlocked();
             blocked.addLast(process);
@@ -55,7 +56,7 @@ public class Escalonador{
         if (credit >= 0) ready[process.getCredit()].addFirst(process);
         else ready[0].addLast(process);
     }
-    
+    // Transferir para o SO (gerencia da Tabela de Processos pertence ao SO)
     void EndProcess(LinkedList<BCP> table, BCP process){
         table.remove(process);
     }
