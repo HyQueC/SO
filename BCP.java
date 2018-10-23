@@ -23,7 +23,7 @@ public class BCP implements Comparable<BCP> {
     public void setX(int x) { X = x; }
 
     public void setY(int y) { Y = y; }
-
+    // Set StatusExecuting() { this.status = -1;}
     public void setStatusReady() { this.status = 0; }
     public void setStatusBlocked() {
         this.status = 1;
