@@ -2,7 +2,7 @@
 
 Classes utilizadas SO, Escalonador e BCP.
 
-Escalonador vai cuidar da inserção e remoção dos processos nas filas de pronto e bloqueado, além da seleção do próximo processo a ser executado.
+Escalonador vai cuidar da inserção e remoção dos processos nas filas de pronto e bloqueado (funções originalmente atribuídas ao Dispachador), além da seleção do próximo processo a ser executado.
 
 SO vai cuidar do resto;
 
@@ -13,7 +13,7 @@ Pontos faltando:
   - Gerencia da fila de bloqueados (contagem de quantos processos passaram pela execução para determinar quando liberar o processo bloqueado).
   - Contagem apropriada do quantum na proporção de 1Q para 3 Instruções. Tal como o comportamento de dobrar o quantum recebido por um processo e não o número de instruções (o número de instruções dobra por consequência disso).
   - Filas de prontos devem referenciar a Tabela de Processos por índice e "não conter os processos (BCP) (Ignorado)
-  
+  - O set de status dos processos deve ser gerenciado pelo SO ou pelo Escalonador?
  
   - Print nos logFiles
   - Contagem das estatísticas pedidas pelo professor (Médias, etc)
