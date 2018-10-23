@@ -6,14 +6,13 @@ Escalonador vai cuidar da inserção e remoção dos processos nas filas de pron
 
 SO vai cuidar do resto;
 
-BCP vai representar o processo ao longo do algoritmo
+BCP vai representar o processo a ser carregado e armazenado ao longo do algoritmo
 
 Pontos faltando:
-  - Reinserção dos processos executados na primeira posição da fila correspondente ao seu número de créditos
   - Organização dos métodos de inserção e remoção no Escalonador
   - Gerencia da fila de bloqueados (contagem de quantos processos passaram pela execução para determinar quando liberar o processo bloqueado).
   - Contagem apropriada do quantum na proporção de 1Q para 3 Instruções. Tal como o comportamento de dobrar o quantum recebido por um processo e não o número de instruções (o número de instruções dobra por consequência disso).
-  - Filas de prontos devem referenciar a Tabela de Processos por índice e "não conter os processos (BCP).
+  - Filas de prontos devem referenciar a Tabela de Processos por índice e "não conter os processos (BCP) (Ignorado)
   
  
   - Print nos logFiles
