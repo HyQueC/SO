@@ -10,7 +10,9 @@ BCP vai representar o processo a ser carregado e armazenado ao longo do algoritm
 
 Pontos faltando:
   - Redistribuição de créditos ineficaz, necessária possível repopulação das filas de processos prontos
-  - Desocupação da fila de processos bloqueados
+  - Possível problema na desocupação da fila de processos bloqueados, ciclo infinito do algoritmo, o print do metodo responsável pela
+    remoção na fila de bloqueados não funciona.
+    - Problema encontrado na inclusão do it.remove() (método de remoção do iterator) - Muito provavelmente não deve ser incluído no código
   
   - Print nos logFiles
   - Contagem das estatísticas pedidas pelo professor (Médias, etc) (fórmula elaborada apenas)
