@@ -9,11 +9,9 @@ SO vai cuidar do resto;
 BCP vai representar o processo a ser carregado e armazenado ao longo do algoritmo
 
 Pontos faltando:
-  - Organização dos métodos de inserção e remoção no Escalonador (falta alguns detalhes)
-  - Gerencia da fila de bloqueados (contagem de quantos processos passaram pela execução para determinar quando liberar o processo bloqueado). (falta confirmar o funcionamento)
-  - Filas de prontos devem referenciar a Tabela de Processos por índice e "não conter os processos (BCP) (Ignorado)
-  - O set de status dos processos deve ser gerenciado pelo SO ou pelo Escalonador?
- 
+  - Redistribuição de créditos ineficaz, necessária possível repopulação das filas de processos prontos
+  - Desocupação da fila de processos bloqueados
+  
   - Print nos logFiles
   - Contagem das estatísticas pedidas pelo professor (Médias, etc) (fórmula elaborada apenas)
   - Definir os outros 10 valores de Quantum (quantas instruções 1Quantum equivale)
