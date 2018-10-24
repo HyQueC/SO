@@ -14,6 +14,7 @@ public class SO {
 
     //Registradores de uso geral, registrador específico (PC) e o Quantum base.
     static int X, Y, PC, quantBase, changeNum, spentQuantum, executedInst;
+    static int[] regList = new int[3];
 
     // Quantum calculado à medida que o processo em execução perde os créditos, e outras variáveis.
     static double changeAverage, instructAverage;
@@ -103,15 +104,40 @@ public class SO {
         }
     }
 
+    static void checkBlockedList(){
 
-    static int executeProcess(BCP proc){
+        if(blocked.size() > 0){
+            ListIterator<BCP> it = blocked.listIterator(0);
+            while(it.hasNext()) {
+                BCP aux = it.next();
+                aux.setBlockTime(aux.getBlockTime() - 1);
+
+                if (aux.getBlockTime() == 0) {
+                    aux.setStatusReady();
+                    esc.setFromBlocked(ready, blocked);
+
+                }
+            }
+            it.remove();
+        }
+    }
+
+    static int executeProcess(){
+
+        checkBlockedList();
+        BCP proc = esc.getNextProcess(ready, regList);
+
         if(proc == null){
             if(blocked.size() == 0) distributeCredits(table);
 
             return 0;
         }
+        PC = regList[0];
+        X = regList[1];
+        Y = regList[2];
+        String cmd;
 
-        String cmd = proc.memoCMD[PC];
+        proc.setStatusExecuting();
 
         // O Número de instruções a serem executadas a é igual ao número base de instruções
         // vezes o número de quantum atribuido ao processo
@@ -120,34 +146,39 @@ public class SO {
 
         while(i <= instruction){
             for(int j = 1; j  <= quantBase; i++, j++){
+                cmd = proc.memoCMD[PC];
                 PC++;
-
+                System.out.println(proc.progamName+ " "+ cmd + " "+ proc.getCredit());
                 if(cmd.equals("COM"));
 
                 else if(cmd.startsWith("X=")){
-                    X = cmd.charAt(2) - '0';
+                    X = Integer.valueOf(cmd.substring(2));
 
 
                 }else if(cmd.startsWith("Y=")){
-                    Y = cmd.charAt(2) - '0';
+                    Y = Integer.valueOf(cmd.substring(2));
 
 
                 }else if(cmd.equals("E/S")){
                     spentQuantum++;
                     changeNum++;
-                    esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, 1);
+                    proc.setStatusBlocked();
+                    esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, proc.getStatus());
+
                     return i;
 
 
                 }else if(cmd.equals("SAIDA")){
                     spentQuantum++;
                     changeNum++;
-                    esc.EndProcess(table, proc);
+                    System.out.println(proc.progamName+ " ACABOOOOOOOOU");
+                    EndProcess(table, proc);
                     return i;
 
 
                 }else {
                     System.out.println("Comando invalido, o processo deixara de ser executado");
+                    proc.setStatusReady();
                     changeNum++;
                     return i;
                 }
@@ -155,9 +186,14 @@ public class SO {
             spentQuantum++;
         }
         changeNum++;
+        proc.setStatusReady();
+        esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, proc.getStatus());
 
-        esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, 0);
         return i;
+    }
+
+    static void EndProcess(LinkedList<BCP> table, BCP process){
+        table.remove(process);
     }
 
     public static void main(String[] args) throws FileNotFoundException{
@@ -183,6 +219,8 @@ public class SO {
         }
         populateReadyTable(ready, table, auxT);
 
+        while(table.size() > 0)executeProcess();
+        /*
         ListIterator<BCP> it;
         BCP aux;
         for(i = maxPrior; i >= 0; i--){
@@ -196,17 +234,12 @@ public class SO {
 
         BCP poop = table.pop();
 
-        /*
-            Retirando o processo de table, não retira de ready
-
-
-        */
 
         esc.setProcessData(ready, blocked, poop, PC, X, Y, poop.getCredit()-1, 0);
-        int[] regList = new int[5];
+
 
         poop.setData(300, 25, 27, poop.getCredit());
-        poop = esc.getNextProcess(ready, blocked, regList);
+        poop = esc.getNextProcess(ready, regList);
 
         PC = regList[0];
         X = regList[1];
@@ -225,7 +258,7 @@ public class SO {
         System.out.println();
 
 
-
+           */
          /*
 
         Algoritmo de Escalonamento

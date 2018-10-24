@@ -1,64 +1,55 @@
-import jdk.dynalink.linker.LinkerServices;
 
 import java.util.LinkedList;
-import java.util.ListIterator;
+
 
 public class Escalonador{
 
-    BCP getNextProcess(LinkedList<BCP>[] ready, LinkedList<BCP> blocked, int[] reg){
+    BCP getNextProcess(LinkedList<BCP>[] ready, int[] reg){
         BCP aux;
-        if(blocked.size() > 0){
-            ListIterator<BCP> it = blocked.listIterator(0);
-            aux = it.next();
-            aux.setBlockTime(aux.getBlockTime()-1);
-            if(aux.getBlockTime() == 0){
-                aux.setStatusReady();
-                setProcessData(ready, blocked, aux, aux.getCredit()-1);
-            }
-        }  //Transferir para o SO
+
         for(int i = ready.length-1; i > 0; i--){
             if(!(ready[i].size() == 0)){
                aux = ready[i].pop();
                 reg[0] = aux.getPC();
                 reg[1] = aux.getX();
                 reg[2] = aux.getY();
-                reg[3] = aux.getCredit();
-                reg[4] = aux.getPriority();
 
                 return aux;
             }
         }
-        aux = ready[0].pop();
-        reg[0] = aux.getPC();
-        reg[1] = aux.getX();
-        reg[2] = aux.getY();
-        reg[3] = aux.getCredit();
-        reg[4] = aux.getPriority();
-        return aux;
+        if(ready[0].size() >0) {
+            aux = ready[0].pop();
+            reg[0] = aux.getPC();
+            reg[1] = aux.getX();
+            reg[2] = aux.getY();
+
+            return aux;
+        }
+        return null;
     }
 
     // Inserção do processo de maneira ordenada pela(o) prioridade/crédito atual.
     // Excessão no caso da fila de crédito 0, FIFO.
-    
     void setProcessData(LinkedList<BCP>[] ready, LinkedList<BCP> blocked, BCP process, int PC, int X, int Y, int credit, int status){
         process.setData(PC, X, Y, credit);
-    // Set status transferido pro SO    
-        if(status == 1) {
-            process.setStatusBlocked();
-            blocked.addLast(process);
-        }else {
-            if (credit >= 0) ready[process.getCredit()].addFirst(process);
+
+        if(status == 1) blocked.addLast(process);
+        else{
+            //Sendo o valor do credito menor do que 0, significa que o processo executou na fila 0, logo
+            // vai pro final dela.
+            if(credit >= 0)ready[process.getCredit()].addFirst(process);
             else ready[0].addLast(process);
         }
+
     }
 
-    void setProcessData(LinkedList<BCP>[] ready, LinkedList<BCP> blocked, BCP process, int credit){
-        if (credit >= 0) ready[process.getCredit()].addFirst(process);
-        else ready[0].addLast(process);
-    }
-    // Transferir para o SO (gerencia da Tabela de Processos pertence ao SO)
-    void EndProcess(LinkedList<BCP> table, BCP process){
-        table.remove(process);
-    }
+    void setFromBlocked(LinkedList<BCP>[] ready, LinkedList<BCP> blocked){
 
+        if(blocked.getFirst().getStatus() == 0) {
+            BCP aux = blocked.pop();
+            System.out.println("REMOCAO "+aux.progamName+ " "+ blocked.size());
+            ready[aux.getCredit()].addFirst(aux);
+        }
+
+    }
 }
