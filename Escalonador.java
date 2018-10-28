@@ -35,9 +35,7 @@ public class Escalonador{
 
         if(status == 1) blocked.addLast(process);
         else{
-            //Sendo o valor do credito menor do que 0, significa que o processo executou na fila 0, logo
-            // vai pro final dela.
-            if(credit >= 0)ready[process.getCredit()].addFirst(process);
+            if(credit > 0)ready[process.getCredit()].addFirst(process);
             else ready[0].addLast(process);
         }
 
@@ -47,8 +45,8 @@ public class Escalonador{
 
         if(blocked.getFirst().getStatus() == 0) {
             BCP aux = blocked.pop();
-            System.out.println("REMOCAO "+aux.progamName+ " "+ blocked.size());
-            ready[aux.getCredit()].addFirst(aux);
+            if(aux.getCredit() > 0)ready[aux.getCredit()].addFirst(aux);
+            else ready[0].addLast(aux);
         }
 
     }

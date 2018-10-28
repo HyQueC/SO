@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -19,6 +20,8 @@ public class SO {
     // Quantum calculado à medida que o processo em execução perde os créditos, e outras variáveis.
     static double changeAverage, instructAverage;
     static String filePath = "./processos/";
+    static PrintWriter logW;
+    static File log;
 
     // Leitura do nome, comandos e quantum a ser utilizado pelos processos.
     static BCP readProcessFile(String fileName){
@@ -31,7 +34,6 @@ public class SO {
 
             Scanner sc = new Scanner(file);
             process.progamName = sc.nextLine();
-
 
             while (sc.hasNextLine()) {
                 process.memoCMD[i] = sc.nextLine();
@@ -88,6 +90,9 @@ public class SO {
         BCP aux;
         while(it.hasNext()) {
             aux = it.next();
+            aux.setPC(0);
+            aux.setCredit(aux.getPriority());
+            logW.println("Carregando "+ aux.progamName);
             table.add(aux);
             ready[aux.getCredit()].add(table.getLast());
         }
@@ -101,24 +106,23 @@ public class SO {
         while(it.hasNext()){
             aux = it.next();
             aux.setCredit(aux.getPriority());
+            if(aux.getStatus() == 0)ready[aux.getCredit()].addLast(aux);
         }
     }
 
     static void checkBlockedList(){
 
         if(blocked.size() > 0){
+            BCP aux = new BCP();
             ListIterator<BCP> it = blocked.listIterator(0);
             while(it.hasNext()) {
-                BCP aux = it.next();
+                aux = it.next();
                 aux.setBlockTime(aux.getBlockTime() - 1);
-
-                if (aux.getBlockTime() == 0) {
-                    aux.setStatusReady();
-                    esc.setFromBlocked(ready, blocked);
-
-                }
             }
-            it.remove();
+            if (blocked.getFirst().getBlockTime() == 0) {
+                blocked.getFirst().setStatusReady();
+                esc.setFromBlocked(ready, blocked);
+            }
         }
     }
 
@@ -128,7 +132,7 @@ public class SO {
         BCP proc = esc.getNextProcess(ready, regList);
 
         if(proc == null){
-            if(blocked.size() == 0) distributeCredits(table);
+            if(blocked.size() == 0 && blocked.getFirst().getCredit() == 0 && blocked.getLast().getCredit() == 0) distributeCredits(table);
 
             return 0;
         }
@@ -138,7 +142,7 @@ public class SO {
         String cmd;
 
         proc.setStatusExecuting();
-
+       logW.println("Executando "+ proc.progamName);
         // O Número de instruções a serem executadas a é igual ao número base de instruções
         // vezes o número de quantum atribuido ao processo
         double instruction = quantBase * Math.pow(2,(proc.getPriority()-proc.getCredit()));
@@ -148,7 +152,6 @@ public class SO {
             for(int j = 1; j  <= quantBase; i++, j++){
                 cmd = proc.memoCMD[PC];
                 PC++;
-                System.out.println(proc.progamName+ " "+ cmd + " "+ proc.getCredit());
                 if(cmd.equals("COM"));
 
                 else if(cmd.startsWith("X=")){
@@ -163,6 +166,8 @@ public class SO {
                     spentQuantum++;
                     changeNum++;
                     proc.setStatusBlocked();
+                    logW.println("E/S iniciada em "+ proc.progamName);
+                    logW.println("Interrompendo "+ proc.progamName+ " apos "+ (i)+ " instrucoes");
                     esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, proc.getStatus());
 
                     return i;
@@ -171,7 +176,7 @@ public class SO {
                 }else if(cmd.equals("SAIDA")){
                     spentQuantum++;
                     changeNum++;
-                    System.out.println(proc.progamName+ " ACABOOOOOOOOU");
+                    logW.println(proc.progamName+ " terminado. X="+X+ ". Y="+Y);
                     EndProcess(table, proc);
                     return i;
 
@@ -187,9 +192,10 @@ public class SO {
         }
         changeNum++;
         proc.setStatusReady();
+        logW.println("Interrompendo "+ proc.progamName+ " apos "+ (i-1)+ " instrucoes");
         esc.setProcessData(ready, blocked, proc, PC, X, Y, proc.getCredit()-1, proc.getStatus());
 
-        return i;
+        return i-1;
     }
 
     static void EndProcess(LinkedList<BCP> table, BCP process){
@@ -197,8 +203,8 @@ public class SO {
     }
 
     public static void main(String[] args) throws FileNotFoundException{
-        esc = new Escalonador();
         LinkedList<BCP> auxT = new LinkedList<>();
+        esc = new Escalonador();
         table = new LinkedList<>();
         blocked = new LinkedList<>();
         int maxPrior, i;
@@ -210,56 +216,41 @@ public class SO {
         auxT.addLast(readProcessFile("10.txt"));
         maxPrior = readPriority( "prioridades.txt", auxT);
         Collections.sort(auxT);
+        for(int k = 1; k < 11; k++) {
+            executedInst = 0;
+            spentQuantum = 0;
+            changeNum = 0;
+            X = 0;
+            Y = 0;
+            quantBase = k;
+            if(k < 10)log = new File("./log0" + quantBase + ".txt");
+            else log = new File("./log" + quantBase + ".txt");
+
+            try {
+                logW = new PrintWriter(log);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
 
 //Criação e preenchimento das filas de prontos com os BCPs presentes na Tabela de Processos
 // de acordo com a prioridade de cada um.
-        ready =  new LinkedList[maxPrior+1];
-        for(i = 0; i <= maxPrior; i++){
-            ready[i] = new LinkedList<BCP>();
-        }
-        populateReadyTable(ready, table, auxT);
-
-        while(table.size() > 0)executeProcess();
-        /*
-        ListIterator<BCP> it;
-        BCP aux;
-        for(i = maxPrior; i >= 0; i--){
-            it = ready[i].listIterator(0);
-            while(it.hasNext()){
-                aux = it.next();
-                System.out.println(aux.progamName+ " " +aux.getCredit());
+            ready = new LinkedList[maxPrior + 1];
+            for (i = 0; i <= maxPrior; i++) {
+                ready[i] = new LinkedList<BCP>();
             }
+            populateReadyTable(ready, table, auxT);
+
+            while (table.size() > 0) executedInst += executeProcess();
+
+
+            logW.println("MEDIA DE TROCAS: "+(double)(changeNum-1)/auxT.size());
+            logW.println("MEDIA DE INSTRUCOES: "+(double)executedInst/spentQuantum);
+
+            logW.close();
         }
-        System.out.println();
 
-        BCP poop = table.pop();
-
-
-        esc.setProcessData(ready, blocked, poop, PC, X, Y, poop.getCredit()-1, 0);
-
-
-        poop.setData(300, 25, 27, poop.getCredit());
-        poop = esc.getNextProcess(ready, regList);
-
-        PC = regList[0];
-        X = regList[1];
-        Y = regList[2];
-
-        System.out.println(poop.getPC()+ " "+ poop.getX()+ " "+ poop.getY()+ " "+ poop.getCredit());
-        System.out.println(PC+ " "+ X+ " "+Y+ " ");
-
-        for(i = maxPrior; i >= 0; i--){
-            it = ready[i].listIterator(0);
-            while(it.hasNext()){
-                aux = it.next();
-                System.out.println(aux.progamName+ " " +aux.getCredit());
-            }
-        }
-        System.out.println();
-
-
-           */
-         /*
+    /*
 
         Algoritmo de Escalonamento
             - Gerência das múltiplas filas
