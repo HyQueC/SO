@@ -8,14 +8,3 @@ SO vai cuidar do resto;
 
 BCP vai representar o processo a ser carregado e armazenado ao longo do algoritmo
 
-Pontos faltando:
-  - Redistribuição de créditos ineficaz, necessária possível repopulação das filas de processos prontos
-  - Possível problema na desocupação da fila de processos bloqueados, ciclo infinito do algoritmo, o print do metodo responsável pela
-    remoção na fila de bloqueados não funciona.
-    - Problema encontrado na inclusão do it.remove() (método de remoção do iterator) - Muito provavelmente não deve ser incluído no código
-  
-  - Print nos logFiles
-  - Contagem das estatísticas pedidas pelo professor (Médias, etc) (fórmula elaborada apenas)
-  - Definir os outros 10 valores de Quantum (quantas instruções 1Quantum equivale)
-  - Formar 2 gráficos com as estatísticas pedidas pelo professor e o quantum definido.
-  - Criar o relatório com o resultado desses valores a fim de determinar o quantum ideal.
