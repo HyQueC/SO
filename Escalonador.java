@@ -7,7 +7,7 @@ public class Escalonador{
     BCP getNextProcess(LinkedList<BCP>[] ready, int[] reg){
         BCP aux;
 
-        for(int i = ready.length-1; i > 0; i--){
+        for(int i = ready.length-1; i >= 0; i--){
             if(!(ready[i].size() == 0)){
                aux = ready[i].pop();
                 reg[0] = aux.getPC();
@@ -17,14 +17,7 @@ public class Escalonador{
                 return aux;
             }
         }
-        if(ready[0].size() >0) {
-            aux = ready[0].pop();
-            reg[0] = aux.getPC();
-            reg[1] = aux.getX();
-            reg[2] = aux.getY();
 
-            return aux;
-        }
         return null;
     }
 

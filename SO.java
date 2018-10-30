@@ -1,10 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.ListIterator;
-import java.util.Scanner;
+import java.util.*;
 
 public class SO {
 
@@ -14,7 +11,7 @@ public class SO {
     static Escalonador esc;
 
     //Registradores de uso geral, registrador específico (PC) e o Quantum base.
-    static int X, Y, PC, quantBase, changeNum, spentQuantum, executedInst;
+    static int X, Y, PC, quantBase, changeNum, givenQuantum, executedInst;
     static int[] regList = new int[3];
 
     // Quantum calculado à medida que o processo em execução perde os créditos, e outras variáveis.
@@ -106,7 +103,10 @@ public class SO {
         while(it.hasNext()){
             aux = it.next();
             aux.setCredit(aux.getPriority());
-            if(aux.getStatus() == 0)ready[aux.getCredit()].addLast(aux);
+            if(aux.getStatus() == 0){
+                ready[0].remove(aux);
+                ready[aux.getCredit()].addLast(aux);
+            }
         }
     }
 
@@ -131,10 +131,23 @@ public class SO {
         checkBlockedList();
         BCP proc = esc.getNextProcess(ready, regList);
 
+        //A redistribuição só é efetuada quando não há processos na fila de prontos, ou o processo escolhido tenha 0 créditos, e
+        // a fila de bloqueados está vazia ou apenas com processos de 0 créditos.
         if(proc == null){
-            if(blocked.size() == 0 && blocked.getFirst().getCredit() == 0 && blocked.getLast().getCredit() == 0) distributeCredits(table);
+            if(blocked.size() > 0 && blocked.getFirst().getCredit() == 0 && blocked.getLast().getCredit() == 0) distributeCredits(table);
 
             return 0;
+        }
+        if(proc.getCredit() == 0){
+            if(blocked.size() == 0){
+                distributeCredits(table);
+                proc = esc.getNextProcess(ready, regList);
+
+            }else if(blocked.getFirst().getCredit() == 0 && blocked.getLast().getCredit() == 0){
+                distributeCredits(table);
+                proc = esc.getNextProcess(ready, regList);
+
+            }
         }
         PC = regList[0];
         X = regList[1];
@@ -143,11 +156,20 @@ public class SO {
 
         proc.setStatusExecuting();
        logW.println("Executando "+ proc.progamName);
+
+        //                      ***Critério ANTERIOR***
         // O Número de instruções a serem executadas a é igual ao número base de instruções
         // vezes o número de quantum atribuido ao processo
-        double instruction = quantBase * Math.pow(2,(proc.getPriority()-proc.getCredit()));
+
+        //double instruction = quantBase * Math.pow(2,(proc.getPriority()-proc.getCredit()));
+
+        double instruction = quantBase * (1 + proc.getPriority()-proc.getCredit());
+        givenQuantum += instruction/quantBase;
         int i = 1;
 
+        // Cada vez que o j adquirir um valor maior que quantBase, quer dizer que um Quantum foi rodado.
+        // Como há processos que têm créditos retirados e, portanto, mais Quantum, o procedimento é mantido
+        // dentro de um while com a condição do número de intruções a serem executadas pelo processo.
         while(i <= instruction){
             for(int j = 1; j  <= quantBase; i++, j++){
                 cmd = proc.memoCMD[PC];
@@ -163,8 +185,8 @@ public class SO {
 
 
                 }else if(cmd.equals("E/S")){
-                    spentQuantum++;
                     changeNum++;
+                    //spentQuantum++;
                     proc.setStatusBlocked();
                     logW.println("E/S iniciada em "+ proc.progamName);
                     logW.println("Interrompendo "+ proc.progamName+ " apos "+ (i)+ " instrucoes");
@@ -174,8 +196,8 @@ public class SO {
 
 
                 }else if(cmd.equals("SAIDA")){
-                    spentQuantum++;
                     changeNum++;
+                    //spentQuantum++;
                     logW.println(proc.progamName+ " terminado. X="+X+ ". Y="+Y);
                     EndProcess(table, proc);
                     return i;
@@ -188,7 +210,7 @@ public class SO {
                     return i;
                 }
             }
-            spentQuantum++;
+            //spentQuantum++;
         }
         changeNum++;
         proc.setStatusReady();
@@ -216,9 +238,11 @@ public class SO {
         auxT.addLast(readProcessFile("10.txt"));
         maxPrior = readPriority( "prioridades.txt", auxT);
         Collections.sort(auxT);
+
         for(int k = 1; k < 11; k++) {
             executedInst = 0;
-            spentQuantum = 0;
+            //spentQuantum = 0;
+            givenQuantum = 0;
             changeNum = 0;
             X = 0;
             Y = 0;
@@ -233,6 +257,18 @@ public class SO {
                 e.printStackTrace();
             }
 
+
+        /*
+            if(quantBase < 10)log = new File("./log0" + quantBase + ".txt");
+            else log = new File("./log" + quantBase + ".txt");
+
+            try {
+                logW = new PrintWriter(log);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            */
 //Criação e preenchimento das filas de prontos com os BCPs presentes na Tabela de Processos
 // de acordo com a prioridade de cada um.
             ready = new LinkedList[maxPrior + 1];
@@ -245,29 +281,10 @@ public class SO {
 
 
             logW.println("MEDIA DE TROCAS: "+(double)(changeNum-1)/auxT.size());
-            logW.println("MEDIA DE INSTRUCOES: "+(double)executedInst/spentQuantum);
+            logW.println("MEDIA DE INSTRUCOES: "+(double)executedInst/givenQuantum);
 
             logW.close();
+
         }
-
-    /*
-
-        Algoritmo de Escalonamento
-            - Gerência das múltiplas filas
-            - Redistribuição de créditos e custeamento
-
-        Estatísticas
-            - Número médio de trocas de processo = changeNum/auxT.size();
-            - Número médio de instruções executadas por quantum = executedInst/spentQuantum
-            - Quantum base utilizado
-
-        Log File
-            - PrintWriter
-            - Inclusão das Estatísticas
-
-        Quantum Ideal
-            - Formação de 2 gráficos a partir das 2 outras estatísticas com o Quantum Base como abscissa
-            - Escolha do Quantum Ideal a partir do ponto de encontro nos dois gráficos.
-        */
     }
 }
